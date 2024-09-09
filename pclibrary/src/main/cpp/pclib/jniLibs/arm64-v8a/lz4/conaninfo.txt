@@ -1,0 +1,35 @@
+[settings]
+    arch=armv8
+    build_type=Release
+    compiler=clang
+    compiler.libcxx=libstdc++11
+    compiler.version=8
+    os=Android
+    os.api_level=21
+
+[requires]
+
+
+[options]
+
+
+[full_settings]
+    arch=armv8
+    build_type=Release
+    compiler=clang
+    compiler.libcxx=libstdc++11
+    compiler.version=8
+    os=Android
+    os.api_level=21
+
+[full_requires]
+
+
+[full_options]
+
+
+[recipe_hash]
+    8331e57cab25e2d855b2aac821460283
+
+[env]
+

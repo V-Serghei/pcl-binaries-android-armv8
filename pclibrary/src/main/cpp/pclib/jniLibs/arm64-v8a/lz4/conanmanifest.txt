@@ -1,0 +1,4 @@
+1725545310
+conaninfo.txt: 7c1ecf4bffcab48fc828f19d63421c71
+include/lz4.h: b67b0f8d2b2f8537860cb8cbfd3c013a
+lib/liblz4.a: 08f641bf98a680a2446ff0b1adf2f808

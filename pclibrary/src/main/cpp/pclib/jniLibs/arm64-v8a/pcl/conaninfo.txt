@@ -1,0 +1,40 @@
+[settings]
+    arch=armv8
+    build_type=Release
+    compiler=clang
+    compiler.libcxx=libstdc++11
+    compiler.version=8
+    os=Android
+    os.api_level=21
+
+[requires]
+    boost/1.Y.Z
+    eigen/3.Y.Z
+    flann/1.Y.Z
+
+[options]
+
+
+[full_settings]
+    arch=armv8
+    build_type=Release
+    compiler=clang
+    compiler.libcxx=libstdc++11
+    compiler.version=8
+    os=Android
+    os.api_level=21
+
+[full_requires]
+    boost/1.70.0@bashbug/stable:4317d68676204855daddf9e93e50d037f61575ca
+    eigen/3.3.7:5ab84d6acfe1f23c4fae0ab88f26e3a396351ac9
+    flann/1.9.1@bashbug/stable:0ae23ce156a999016ff3644328f7150befab40a6
+    lz4/1.9.1@bashbug/stable:4317d68676204855daddf9e93e50d037f61575ca
+
+[full_options]
+    eigen:MPL2_only=False
+
+[recipe_hash]
+    9548235ed3e87b25c8593b3cc5490ad4
+
+[env]
+

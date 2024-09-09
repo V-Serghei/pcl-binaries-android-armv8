@@ -1,0 +1,35 @@
+[settings]
+    arch=armv8
+    build_type=Release
+    compiler=clang
+    compiler.libcxx=libstdc++11
+    compiler.version=8
+    os=Android
+    os.api_level=21
+
+[requires]
+    lz4/1.Y.Z
+
+[options]
+
+
+[full_settings]
+    arch=armv8
+    build_type=Release
+    compiler=clang
+    compiler.libcxx=libstdc++11
+    compiler.version=8
+    os=Android
+    os.api_level=21
+
+[full_requires]
+    lz4/1.9.1@bashbug/stable:4317d68676204855daddf9e93e50d037f61575ca
+
+[full_options]
+
+
+[recipe_hash]
+    f3ea2e60d59f852dc2bf413cf66f63bb
+
+[env]
+
