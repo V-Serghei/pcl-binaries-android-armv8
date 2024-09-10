@@ -3,7 +3,7 @@ import org.apache.tools.ant.taskdefs.condition.Os
 plugins {
     alias(libs.plugins.android.library)
     alias(libs.plugins.jetbrains.kotlin.android)
-    id("maven-publish")
+    id("com.vanniktech.maven.publish") version "0.28.0"
 
 }
 
@@ -128,27 +128,8 @@ preBuild.dependsOn extractArchives
 
 
 
-subprojects {
-    apply plugin: "maven-publish"
 
-    publishing {
-        repositories {
-            maven {
-                name = "GitHubPackages"
-                url = uri("https://maven.pkg.github.com/V-Serghei/pcl-binaries-android-armv8")
-                credentials {
-                    username = project.findProperty("gpr.user") ?: System.getenv("USERNAME")
-                    password = project.findProperty("gpr.key") ?: System.getenv("TOKEN")
-                }
-            }
-        }
-        publications {
-            gpr(MavenPublication) {
-                from(components.java)
-            }
-        }
-    }
-}
+
 
 android {
     namespace 'com.example.pclibrary'
@@ -156,7 +137,9 @@ android {
 
     defaultConfig {
         minSdk 29
-
+        targetSdkVersion 33
+        versionCode 1
+        versionName "1.0"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         consumerProguardFiles "consumer-rules.pro"
         externalNativeBuild {
@@ -196,6 +179,30 @@ android {
 
 
 }
+
+
+
+publishing {
+    repositories {
+        maven {
+            name = "GitHubPackages"
+            url = uri("https://maven.pkg.github.com/V-Serghei/pcl-binaries-android-armv8")
+            credentials {
+                username = project.findProperty("gpr.user") ?: System.getenv("USERNAME")
+                password = project.findProperty("gpr.key") ?: System.getenv("TOKEN")
+            }
+        }
+    }
+    publications {
+        gpr(MavenPublication) {
+            groupId = 'org.group'
+            artifactId = 'artifact'
+            version = '0.1'
+        }
+    }
+
+}
+
 
 dependencies {
     implementation libs.androidx.core.ktx
