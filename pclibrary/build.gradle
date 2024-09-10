@@ -1,10 +1,104 @@
-import org.gradle.api.tasks.Exec
+import org.apache.tools.ant.taskdefs.condition.Os
+
 plugins {
     alias(libs.plugins.android.library)
     alias(libs.plugins.jetbrains.kotlin.android)
     id("maven-publish")
 
 }
+
+
+tasks.register('mergeArchiveParts') {
+    def archiveDir = file('src/main/cpp/pclib/jniLibs/arm64-v8a/pcl/lib')
+
+    doLast {
+        def zipFiles = [
+                'libpcl_tracking.zip',
+                'libpcl_surface.zip',
+                'libpcl_common.zip',
+                'libpcl_features.zip',
+                'libpcl_filters.zip',
+                'libpcl_io.zip',
+                'libpcl_io_ply.zip',
+                'libpcl_kdtree.zip',
+                'libpcl_keypoints.zip',
+                'libpcl_ml.zip',
+                'libpcl_octree.zip',
+                'libpcl_recognition.zip',
+                'libpcl_registration.zip',
+                'libpcl_sample_consensus.zip',
+                'libpcl_search.zip',
+                'libpcl_segmentation.zip',
+                'libpcl_stereo.zip'
+        ]
+
+        zipFiles.each { archiveName ->
+            def outputFile = file("${archiveDir}/${archiveName}")
+
+            def outputStream = new FileOutputStream(outputFile, true)
+
+            def parts = fileTree(dir: archiveDir, includes: ["${archiveName}.*"])
+            parts.each { part ->
+                outputStream.write(part.bytes)
+                println "Add: ${part.name}"
+            }
+
+            outputStream.close()
+            println "Merge completed, file: $outputFile"
+        }
+    }
+}
+
+
+tasks.register('extractArchives') {
+    def archiveDir = file('src/main/cpp/pclib/jniLibs/arm64-v8a/pcl/lib')
+
+    doLast {
+        def archives = [
+                'libpcl_tracking.zip',
+                'libpcl_surface.zip',
+                'libpcl_common.zip',
+                'libpcl_features.zip',
+                'libpcl_filters.zip',
+                'libpcl_io.zip',
+                'libpcl_io_ply.zip',
+                'libpcl_kdtree.zip',
+                'libpcl_keypoints.zip',
+                'libpcl_ml.zip',
+                'libpcl_octree.zip',
+                'libpcl_recognition.zip',
+                'libpcl_registration.zip',
+                'libpcl_sample_consensus.zip',
+                'libpcl_search.zip',
+                'libpcl_segmentation.zip',
+                'libpcl_stereo.zip'
+        ]
+
+        archives.each { archiveName ->
+            def archiveFile = file("${archiveDir}/${archiveName}")
+
+            if (Os.isFamily(Os.FAMILY_WINDOWS)) {
+                exec {
+                    commandLine 'powershell', '-command', "& {Expand-Archive -Path '${archiveFile}' -DestinationPath '${archiveDir}' -Force}"
+                }
+            } else {
+                exec {
+                    commandLine 'bash', '-c', "unzip ${archiveFile} -d ${archiveDir}"
+                }
+            }
+
+            println "archive ${archiveName} Successfully unpacked!"
+        }
+    }
+}
+
+extractArchives.dependsOn mergeArchiveParts
+
+preBuild.dependsOn extractArchives
+
+
+
+
 subprojects {
     apply plugin: "maven-publish"
     publishing {
@@ -25,6 +119,7 @@ subprojects {
         }
     }
 }
+
 android {
     namespace 'com.example.pclibrary'
     compileSdk 34
@@ -42,7 +137,6 @@ android {
         ndk {
             abiFilters "arm64-v8a"
         }
-
     }
 
     buildTypes {
@@ -51,40 +145,29 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
+
     externalNativeBuild {
         cmake {
             path "src/main/cpp/CMakeLists.txt"
             version "3.22.1"
         }
     }
+
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
     }
+
     kotlinOptions {
         jvmTarget = '1.8'
     }
-    task unzipArchives(type: Copy) {
-        // Указываем путь к папке, куда будут распакованы архивы
-        def outputDir = file("$buildDir/libs/arm64-v8a")
-        outputs.dir outputDir
 
-        // Определяем файлы архивов
-        def archives = fileTree(dir: 'pclibrary/src/main/cpp/pclib/jniLibs/arm64-v8a/pcl', includes: ['*.tar.0*'])
 
-        // Создаем задачу для разархивирования
-        from archives.collect { zipTree(it) }
-        into outputDir
-    }
-    tasks.whenTaskAdded { task ->
-        if (task.name.contains('assemble')) {
-            task.dependsOn unzipArchives
-        }
-    }
+
+
 }
 
 dependencies {
-
     implementation libs.androidx.core.ktx
     implementation libs.androidx.appcompat
     implementation libs.material
