@@ -7,7 +7,6 @@ plugins {
 
 }
 
-
 tasks.register('mergeArchiveParts') {
     def archiveDir = file('src/main/cpp/pclib/jniLibs/arm64-v8a/pcl/lib')
 
@@ -35,16 +34,29 @@ tasks.register('mergeArchiveParts') {
         zipFiles.each { archiveName ->
             def outputFile = file("${archiveDir}/${archiveName}")
 
-            def outputStream = new FileOutputStream(outputFile, true)
+            def partsPattern = "${archiveName}.*"
+            def parts = fileTree(dir: archiveDir, includes: [partsPattern])
+            boolean allPartsExist = parts.files.size() > 0
 
-            def parts = fileTree(dir: archiveDir, includes: ["${archiveName}.*"])
-            parts.each { part ->
-                outputStream.write(part.bytes)
-                println "Add: ${part.name}"
+            if (allPartsExist) {
+                println "Merging parts for ${archiveName}..."
+
+                if (!outputFile.exists()) {
+                    def outputStream = new FileOutputStream(outputFile, true)
+
+                    parts.each { part ->
+                        outputStream.write(part.bytes)
+                        println "Added: ${part.name}"
+                    }
+
+                    outputStream.close()
+                    println "Merge completed, file: $outputFile"
+                } else {
+                    println "File ${archiveName} already exists, skipping merge."
+                }
+            } else {
+                println "Not all parts for ${archiveName} are available, skipping merge."
             }
-
-            outputStream.close()
-            println "Merge completed, file: $outputFile"
         }
     }
 }
@@ -77,17 +89,34 @@ tasks.register('extractArchives') {
         archives.each { archiveName ->
             def archiveFile = file("${archiveDir}/${archiveName}")
 
-            if (Os.isFamily(Os.FAMILY_WINDOWS)) {
-                exec {
-                    commandLine 'powershell', '-command', "& {Expand-Archive -Path '${archiveFile}' -DestinationPath '${archiveDir}' -Force}"
+            if (archiveFile.exists()) {
+                if (Os.isFamily(Os.FAMILY_WINDOWS)) {
+                    exec {
+                        commandLine 'powershell', '-command', "& {Expand-Archive -Path '${archiveFile}' -DestinationPath '${archiveDir}' -Force}"
+                    }
+                } else {
+                    exec {
+                        commandLine 'bash', '-c', "unzip ${archiveFile} -d ${archiveDir}"
+                    }
+                }
+
+                println "Archive ${archiveName} successfully unpacked!"
+
+                if (archiveFile.exists()) {
+                    archiveFile.delete()
+                    println "Deleted archive ${archiveName}"
+                }
+
+                def parts = fileTree(dir: archiveDir, includes: ["${archiveName}.*"])
+                parts.each { part ->
+                    if (part.exists()) {
+                        part.delete()
+                        println "Deleted part of archive ${part.name}"
+                    }
                 }
             } else {
-                exec {
-                    commandLine 'bash', '-c', "unzip ${archiveFile} -d ${archiveDir}"
-                }
+                println "Archive ${archiveName} does not exist, skipping extraction."
             }
-
-            println "archive ${archiveName} Successfully unpacked!"
         }
     }
 }
