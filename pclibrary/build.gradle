@@ -130,14 +130,15 @@ preBuild.dependsOn extractArchives
 
 subprojects {
     apply plugin: "maven-publish"
+
     publishing {
         repositories {
             maven {
-                name = "pcl-binaries-android-armv8"
-                url = uri("https://github.com/V-Serghei/pcl-binaries-android-armv8")
+                name = "GitHubPackages"
+                url = uri("https://maven.pkg.github.com/V-Serghei/pcl-binaries-android-armv8")
                 credentials {
-                    username = project.findProperty("gpr.user") ?: System.getenv("V-Serghei")
-                    password = project.findProperty("gpr.key") ?: System.getenv("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")
+                    username = project.findProperty("gpr.user") ?: System.getenv("USERNAME")
+                    password = project.findProperty("gpr.key") ?: System.getenv("TOKEN")
                 }
             }
         }
