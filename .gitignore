@@ -25,5 +25,9 @@ Thumbs.db
 *.swp
 *.swo
 
+# Local tool downloads
+.tools/
+
 # Archives produced while preparing vendored native binaries
 pclibrary/src/main/cpp/pclib/jniLibs/arm64-v8a/pcl/lib/*.zip
+pclibrary/src/main/cpp/pclib/jniLibs/arm64-v8a/pcl/lib/*.a
