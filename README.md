@@ -22,7 +22,7 @@ Add the package to the Android app module:
 
 ```groovy
 dependencies {
-    implementation "io.github.vserghei:pcl-android-arm64:1.0.2"
+    implementation "io.github.v-serghei:pcl-android-arm64:1.0.2"
 }
 ```
 
@@ -66,13 +66,32 @@ Use PCL headers in C++:
 #include <pcl/filters/voxel_grid.h>
 ```
 
+## Consumer Project Setup
+
+Use Maven Central as the default integration path. It is public and does not require GitHub credentials:
+
+```groovy
+repositories {
+    google()
+    mavenCentral()
+}
+
+dependencies {
+    implementation "io.github.v-serghei:pcl-android-arm64:1.0.2"
+}
+```
+
+GitHub Packages is only a fallback for versions that are not available on Maven Central yet. It can require a GitHub token with package read access, even when the repository and package are public.
+
+Consuming Android modules must also enable Prefab, use `arm64-v8a`, and pin NDK `26.1.10909125`.
+
 ## Package Coordinates
 
 | Field | Value |
 | --- | --- |
 | Public Maven repository | `mavenCentral()` |
 | GitHub Packages repository | `https://maven.pkg.github.com/V-Serghei/pcl-binaries-android-armv8` |
-| Group ID | `io.github.vserghei` |
+| Group ID | `io.github.v-serghei` |
 | Artifact ID | `pcl-android-arm64` |
 | Current version | `1.0.2` |
 | Android ABI | `arm64-v8a` |
@@ -144,7 +163,7 @@ android {
 }
 
 dependencies {
-    implementation "io.github.vserghei:pcl-android-arm64:1.0.2"
+    implementation "io.github.v-serghei:pcl-android-arm64:1.0.2"
 }
 ```
 
@@ -348,7 +367,7 @@ Release flow:
 Expected published coordinate:
 
 ```text
-io.github.vserghei:pcl-android-arm64:1.0.2
+io.github.v-serghei:pcl-android-arm64:1.0.2
 ```
 
 ## Maven Central Manual Upload
@@ -460,7 +479,7 @@ repositories {
 }
 
 dependencies {
-    implementation "io.github.vserghei:pcl-android-arm64:1.0.2"
+    implementation "io.github.v-serghei:pcl-android-arm64:1.0.2"
 }
 ```
 
