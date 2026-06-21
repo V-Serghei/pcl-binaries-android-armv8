@@ -6,7 +6,7 @@ This repository is for Android apps that already use the NDK/CMake and want to u
 
 ## Quick Start
 
-Add GitHub Packages to the consuming project's `settings.gradle`:
+After the package is published to Maven Central, add standard repositories to the consuming project's `settings.gradle`:
 
 ```groovy
 dependencyResolutionManagement {
@@ -14,13 +14,6 @@ dependencyResolutionManagement {
     repositories {
         google()
         mavenCentral()
-        maven {
-            url = uri("https://maven.pkg.github.com/V-Serghei/pcl-binaries-android-armv8")
-            credentials {
-                username = providers.gradleProperty("gpr.user").orNull ?: System.getenv("GITHUB_ACTOR")
-                password = providers.gradleProperty("gpr.key").orNull ?: System.getenv("GITHUB_TOKEN")
-            }
-        }
     }
 }
 ```
@@ -37,6 +30,8 @@ Enable Prefab and restrict the app to `arm64-v8a`:
 
 ```groovy
 android {
+    ndkVersion "26.1.10909125"
+
     buildFeatures {
         prefab true
     }
@@ -75,7 +70,8 @@ Use PCL headers in C++:
 
 | Field | Value |
 | --- | --- |
-| Maven repository | `https://maven.pkg.github.com/V-Serghei/pcl-binaries-android-armv8` |
+| Public Maven repository | `mavenCentral()` |
+| GitHub Packages repository | `https://maven.pkg.github.com/V-Serghei/pcl-binaries-android-armv8` |
 | Group ID | `io.github.vserghei` |
 | Artifact ID | `pcl-android-arm64` |
 | Current version | `1.0.2` |
@@ -103,7 +99,7 @@ Use PCL headers in C++:
 | Kotlin Gradle Plugin | `1.9.0` |
 | Compile SDK | `34` |
 | CMake | `3.22.1` |
-| Tested NDK | `26.1.10909125` |
+| Required NDK | `26.1.10909125` |
 
 ## Full Usage Example
 
@@ -117,6 +113,7 @@ plugins {
 android {
     namespace "com.example.pclapp"
     compileSdk 34
+    ndkVersion "26.1.10909125"
 
     defaultConfig {
         applicationId "com.example.pclapp"
@@ -150,6 +147,48 @@ dependencies {
     implementation "io.github.vserghei:pcl-android-arm64:1.0.2"
 }
 ```
+
+## Required NDK Version
+
+Install Android NDK `26.1.10909125` before building a consuming app.
+
+In Android Studio:
+
+```text
+Tools -> SDK Manager -> SDK Tools -> NDK (Side by side)
+```
+
+Enable **Show Package Details**, select:
+
+```text
+26.1.10909125
+```
+
+Then click **Apply**.
+
+Pin the same version in the Android module that uses this package:
+
+```groovy
+android {
+    ndkVersion "26.1.10909125"
+}
+```
+
+For example, in a consuming project with a `nativelib` module:
+
+```powershell
+.\gradlew.bat clean :nativelib:assembleDebug
+```
+
+This package was built and tested with NDK `26.1.10909125`. NDK 27 uses libc++ 18, where `std::binary_function` is fully removed. The bundled PCL/FLANN headers still reference `std::binary_function`, and NDK 26 still provides it in C++17 mode.
+
+If you see an error like this, the consuming app is likely building with NDK 27:
+
+```text
+flann/util/heap.h:108:35: error: no template named 'binary_function' in namespace 'std'
+```
+
+Use NDK `26.1.10909125` and rebuild.
 
 Minimal app `CMakeLists.txt`:
 
@@ -205,9 +244,30 @@ Java_com_example_pclapp_MainActivity_runPclSmokeTest(JNIEnv* env, jobject) {
 }
 ```
 
-## Authentication For GitHub Packages
+## GitHub Packages Fallback
 
 GitHub Packages may require authentication even for public packages.
+
+Use this repository only if the version you need is not published to Maven Central yet.
+
+Add GitHub Packages to the consuming project's `settings.gradle`:
+
+```groovy
+dependencyResolutionManagement {
+    repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
+    repositories {
+        google()
+        mavenCentral()
+        maven {
+            url = uri("https://maven.pkg.github.com/V-Serghei/pcl-binaries-android-armv8")
+            credentials {
+                username = providers.gradleProperty("gpr.user").orNull ?: System.getenv("GITHUB_ACTOR")
+                password = providers.gradleProperty("gpr.key").orNull ?: System.getenv("GITHUB_TOKEN")
+            }
+        }
+    }
+}
+```
 
 For local development, put credentials in the consuming project's `~/.gradle/gradle.properties`:
 
@@ -291,6 +351,119 @@ Expected published coordinate:
 io.github.vserghei:pcl-android-arm64:1.0.2
 ```
 
+## Maven Central Manual Upload
+
+Maven Central is the recommended public distribution channel because consumers can use `mavenCentral()` without GitHub tokens.
+
+Central Portal does not accept a plain `.aar` file. The **Publish Component** dialog expects a signed Maven deployment bundle `.zip` that contains the AAR, POM, Gradle module metadata, sources jar, javadoc jar, checksums, and GPG signatures.
+
+### 1. Create A Signing Key
+
+Install GPG, then create a key:
+
+```powershell
+gpg --full-generate-key
+```
+
+Use:
+
+```text
+Key type: RSA and RSA
+Key size: 4096
+Expiration: your choice
+Name: V-Serghei
+Email: your email
+```
+
+List keys:
+
+```powershell
+gpg --list-secret-keys --keyid-format LONG
+```
+
+Export the private key as ASCII:
+
+```powershell
+gpg --armor --export-secret-keys YOUR_KEY_ID
+```
+
+Copy the full output, including:
+
+```text
+-----BEGIN PGP PRIVATE KEY BLOCK-----
+...
+-----END PGP PRIVATE KEY BLOCK-----
+```
+
+### 2. Configure Local Gradle Signing
+
+Add this to `~/.gradle/gradle.properties`:
+
+```properties
+signingInMemoryKeyFile=C:/Users/YOUR_USER/.gradle/pcl-central-signing-key.asc
+signingInMemoryKeyPassword=YOUR_GPG_KEY_PASSWORD
+```
+
+Save the exported private key to the file from `signingInMemoryKeyFile`. Do not commit this key file.
+
+You can also use an inline key instead of a file:
+
+```properties
+signingInMemoryKey=-----BEGIN PGP PRIVATE KEY BLOCK-----\n...\n-----END PGP PRIVATE KEY BLOCK-----
+signingInMemoryKeyPassword=YOUR_GPG_KEY_PASSWORD
+```
+
+Do not commit these properties.
+
+### 3. Build The Central Portal Bundle
+
+Run:
+
+```powershell
+.\gradlew.bat clean :pclibrary:mavenCentralBundle
+```
+
+The upload file will be created at:
+
+```text
+pclibrary/build/distributions/pcl-android-arm64-1.0.2-maven-central-bundle.zip
+```
+
+### 4. Upload In Central Portal
+
+In `central.sonatype.com/publishing`:
+
+1. Click **Publish Component**.
+2. Use deployment name:
+   ```text
+   pcl-android-arm64-1.0.2
+   ```
+3. Optional description:
+   ```text
+   PCL Android ARM64 AAR with Prefab metadata.
+   ```
+4. Click **Choose File**.
+5. Select:
+   ```text
+   pclibrary/build/distributions/pcl-android-arm64-1.0.2-maven-central-bundle.zip
+   ```
+6. Click **Publish Component**.
+7. Wait for validation.
+8. If validation passes, click **Publish** on the deployment card.
+
+After Maven Central sync completes, consumers can use:
+
+```groovy
+repositories {
+    google()
+    mavenCentral()
+}
+
+dependencies {
+    implementation "io.github.vserghei:pcl-android-arm64:1.0.2"
+}
+```
+
 ## What This Package Is Not
 
 This package is not a high-level Kotlin/Java PCL API.
@@ -332,6 +505,30 @@ android {
     }
 }
 ```
+
+### `std::binary_function` is missing in FLANN headers
+
+Pin the consuming Android module to NDK `26.1.10909125`:
+
+```groovy
+android {
+    ndkVersion "26.1.10909125"
+}
+```
+
+Then install that NDK through Android Studio:
+
+```text
+Tools -> SDK Manager -> SDK Tools -> NDK (Side by side) -> Show Package Details -> 26.1.10909125 -> Apply
+```
+
+Rebuild:
+
+```powershell
+.\gradlew.bat clean :nativelib:assembleDebug
+```
+
+NDK 27 uses libc++ 18, where `std::binary_function` is removed. The bundled PCL/FLANN version needs NDK 26 compatibility.
 
 ### GitHub Packages returns 401 or 403
 

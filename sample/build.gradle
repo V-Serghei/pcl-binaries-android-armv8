@@ -5,6 +5,7 @@ plugins {
 android {
     namespace 'io.github.vserghei.pcl.sample'
     compileSdk 34
+    ndkVersion '26.1.10909125'
 
     defaultConfig {
         applicationId 'io.github.vserghei.pcl.sample'

@@ -4,6 +4,7 @@ plugins {
     alias(libs.plugins.android.library)
     alias(libs.plugins.jetbrains.kotlin.android)
     id("maven-publish")
+    id("signing")
 }
 
 def nativeRoot = file('src/main/cpp/pclib/jniLibs/arm64-v8a')
@@ -95,9 +96,14 @@ tasks.register('preparePrefabHeaders', Sync) {
     into(prefabHeadersDir)
 }
 
+tasks.register('emptyJavadocJar', Jar) {
+    archiveClassifier = 'javadoc'
+}
+
 android {
     namespace 'io.github.vserghei.pcl'
     compileSdk 34
+    ndkVersion '26.1.10909125'
 
     defaultConfig {
         minSdk 29
@@ -175,12 +181,17 @@ publishing {
                 password = project.findProperty("gpr.key") ?: System.getenv("TOKEN")
             }
         }
+        maven {
+            name = "MavenCentralBundle"
+            url = layout.buildDirectory.dir("mavenCentralStaging").get().asFile.toURI()
+        }
     }
     publications {
         release(MavenPublication) {
             groupId = project.findProperty("GROUP")
             artifactId = project.findProperty("POM_ARTIFACT_ID")
             version = project.findProperty("VERSION_NAME")
+            artifact(tasks.named('emptyJavadocJar'))
 
             pom {
                 name = project.findProperty("POM_NAME")
@@ -211,6 +222,53 @@ publishing {
 afterEvaluate {
     publishing.publications.named("release", MavenPublication) {
         from components.release
+    }
+}
+
+signing {
+    def signingKey = project.findProperty("signingInMemoryKey") ?: System.getenv("SIGNING_KEY")
+    def signingKeyFile = project.findProperty("signingInMemoryKeyFile") ?: System.getenv("SIGNING_KEY_FILE")
+    def signingPassword = project.findProperty("signingInMemoryKeyPassword") ?: System.getenv("SIGNING_PASSWORD")
+
+    if (!signingKey && signingKeyFile) {
+        signingKey = file(signingKeyFile).text
+    }
+
+    required {
+        gradle.taskGraph.hasTask(":pclibrary:mavenCentralBundle") ||
+                gradle.taskGraph.hasTask(":pclibrary:publishReleasePublicationToMavenCentralBundleRepository")
+    }
+
+    if (signingKey) {
+        useInMemoryPgpKeys(signingKey, signingPassword)
+    }
+
+    sign publishing.publications.release
+}
+
+tasks.register('mavenCentralBundle', Zip) {
+    group = "publishing"
+    description = "Builds a signed Maven Central deployment bundle for manual upload in Central Portal."
+    dependsOn tasks.named('publishReleasePublicationToMavenCentralBundleRepository')
+
+    archiveFileName = "${project.findProperty("POM_ARTIFACT_ID")}-${project.findProperty("VERSION_NAME")}-maven-central-bundle.zip"
+    destinationDirectory = layout.buildDirectory.dir("distributions")
+    from(layout.buildDirectory.dir("mavenCentralStaging"))
+
+    doFirst {
+        def signingKey = project.findProperty("signingInMemoryKey") ?: System.getenv("SIGNING_KEY")
+        def signingKeyFile = project.findProperty("signingInMemoryKeyFile") ?: System.getenv("SIGNING_KEY_FILE")
+        if (!signingKey) {
+            signingKey = signingKeyFile ? file(signingKeyFile).text : null
+        }
+        if (!signingKey) {
+            throw new GradleException("Maven Central requires signed artifacts. Add signingInMemoryKeyFile and signingInMemoryKeyPassword to ~/.gradle/gradle.properties or set SIGNING_KEY_FILE and SIGNING_PASSWORD.")
+        }
+    }
+
+    doLast {
+        def bundleFile = archiveFile.get().asFile
+        println "Maven Central bundle created: ${bundleFile.absolutePath}"
     }
 }
 
