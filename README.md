@@ -29,7 +29,7 @@ Add the package to the Android app module:
 
 ```groovy
 dependencies {
-    implementation "io.github.vserghei:pcl-android-arm64:1.0.1"
+    implementation "io.github.vserghei:pcl-android-arm64:1.0.2"
 }
 ```
 
@@ -78,7 +78,7 @@ Use PCL headers in C++:
 | Maven repository | `https://maven.pkg.github.com/V-Serghei/pcl-binaries-android-armv8` |
 | Group ID | `io.github.vserghei` |
 | Artifact ID | `pcl-android-arm64` |
-| Current version | `1.0.1` |
+| Current version | `1.0.2` |
 | Android ABI | `arm64-v8a` |
 | Minimum SDK | `29` |
 | Package format | Android AAR with Prefab |
@@ -147,7 +147,7 @@ android {
 }
 
 dependencies {
-    implementation "io.github.vserghei:pcl-android-arm64:1.0.1"
+    implementation "io.github.vserghei:pcl-android-arm64:1.0.2"
 }
 ```
 
@@ -281,14 +281,14 @@ Release flow:
 1. Update `VERSION_NAME` in `gradle.properties`.
 2. Commit and push the changes.
 3. Merge into `main`.
-4. Create a GitHub Release with a matching tag, for example `v1.0.1`.
+4. Create a GitHub Release with a matching tag, for example `v1.0.2`.
 5. The `Gradle Package` workflow builds the library and sample.
 6. On release events, the workflow runs `:pclibrary:publish`.
 
 Expected published coordinate:
 
 ```text
-io.github.vserghei:pcl-android-arm64:1.0.1
+io.github.vserghei:pcl-android-arm64:1.0.2
 ```
 
 ## What This Package Is Not
