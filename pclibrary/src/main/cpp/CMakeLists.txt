@@ -11,7 +11,11 @@ link_directories(${BOOST_ROOT}/lib ${FLANN_ROOT}/lib ${LZ4_ROOT}/lib ${PCL_ROOT}
 add_library(${CMAKE_PROJECT_NAME} SHARED
         pclibrary.cpp)
 
+target_compile_options(${CMAKE_PROJECT_NAME} PRIVATE -fopenmp)
+target_link_options(${CMAKE_PROJECT_NAME} PRIVATE -fopenmp)
+
 target_link_libraries(${CMAKE_PROJECT_NAME}
+        -Wl,--whole-archive
         -lpcl_common
         -lpcl_io
         -lpcl_io_ply
@@ -29,6 +33,9 @@ target_link_libraries(${CMAKE_PROJECT_NAME}
         -lpcl_surface
         -lpcl_octree
         -lpcl_stereo
+        -Wl,--no-whole-archive
+        -lflann_cpp_s
+        -llz4
         -lboost_system
         -lboost_filesystem
         -lboost_thread
@@ -55,9 +62,6 @@ target_link_libraries(${CMAKE_PROJECT_NAME}
         -lboost_prg_exec_monitor
         -lboost_timer
         -lboost_context
-        -lboost_log_setup
-        -lboost_log
-        -lboost_program_options
         -landroid
         -llog
         -latomic

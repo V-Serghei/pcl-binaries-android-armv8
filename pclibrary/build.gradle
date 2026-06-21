@@ -3,53 +3,51 @@ import org.apache.tools.ant.taskdefs.condition.Os
 plugins {
     alias(libs.plugins.android.library)
     alias(libs.plugins.jetbrains.kotlin.android)
-    id("com.vanniktech.maven.publish") version "0.28.0"
-
+    id("maven-publish")
 }
 
+def nativeRoot = file('src/main/cpp/pclib/jniLibs/arm64-v8a')
+def pclLibDir = file("${nativeRoot}/pcl/lib")
+def prefabHeadersDir = layout.buildDirectory.dir("generated/prefabHeaders")
+def pclArchives = [
+        'libpcl_tracking.zip',
+        'libpcl_surface.zip',
+        'libpcl_common.zip',
+        'libpcl_features.zip',
+        'libpcl_filters.zip',
+        'libpcl_io.zip',
+        'libpcl_io_ply.zip',
+        'libpcl_kdtree.zip',
+        'libpcl_keypoints.zip',
+        'libpcl_ml.zip',
+        'libpcl_octree.zip',
+        'libpcl_recognition.zip',
+        'libpcl_registration.zip',
+        'libpcl_sample_consensus.zip',
+        'libpcl_search.zip',
+        'libpcl_segmentation.zip',
+        'libpcl_stereo.zip'
+]
+
 tasks.register('mergeArchiveParts') {
-    def archiveDir = file('src/main/cpp/pclib/jniLibs/arm64-v8a/pcl/lib')
-
     doLast {
-        def zipFiles = [
-                'libpcl_tracking.zip',
-                'libpcl_surface.zip',
-                'libpcl_common.zip',
-                'libpcl_features.zip',
-                'libpcl_filters.zip',
-                'libpcl_io.zip',
-                'libpcl_io_ply.zip',
-                'libpcl_kdtree.zip',
-                'libpcl_keypoints.zip',
-                'libpcl_ml.zip',
-                'libpcl_octree.zip',
-                'libpcl_recognition.zip',
-                'libpcl_registration.zip',
-                'libpcl_sample_consensus.zip',
-                'libpcl_search.zip',
-                'libpcl_segmentation.zip',
-                'libpcl_stereo.zip'
-        ]
-
-        zipFiles.each { archiveName ->
-            def outputFile = file("${archiveDir}/${archiveName}")
+        pclArchives.each { archiveName ->
+            def outputFile = file("${pclLibDir}/${archiveName}")
 
             def partsPattern = "${archiveName}.*"
-            def parts = fileTree(dir: archiveDir, includes: [partsPattern])
-            boolean allPartsExist = parts.files.size() > 0
+            def parts = fileTree(dir: pclLibDir, includes: [partsPattern]).files.sort { it.name }
 
-            if (allPartsExist) {
+            if (!parts.empty) {
                 println "Merging parts for ${archiveName}..."
 
                 if (!outputFile.exists()) {
-                    def outputStream = new FileOutputStream(outputFile, true)
-
-                    parts.each { part ->
-                        outputStream.write(part.bytes)
-                        println "Added: ${part.name}"
+                    outputFile.withOutputStream { outputStream ->
+                        parts.each { part ->
+                            outputStream.write(part.bytes)
+                            println "Added: ${part.name}"
+                        }
                     }
 
-                    outputStream.close()
                     println "Merge completed, file: $outputFile"
                 } else {
                     println "File ${archiveName} already exists, skipping merge."
@@ -63,57 +61,22 @@ tasks.register('mergeArchiveParts') {
 
 
 tasks.register('extractArchives') {
-    def archiveDir = file('src/main/cpp/pclib/jniLibs/arm64-v8a/pcl/lib')
-
     doLast {
-        def archives = [
-                'libpcl_tracking.zip',
-                'libpcl_surface.zip',
-                'libpcl_common.zip',
-                'libpcl_features.zip',
-                'libpcl_filters.zip',
-                'libpcl_io.zip',
-                'libpcl_io_ply.zip',
-                'libpcl_kdtree.zip',
-                'libpcl_keypoints.zip',
-                'libpcl_ml.zip',
-                'libpcl_octree.zip',
-                'libpcl_recognition.zip',
-                'libpcl_registration.zip',
-                'libpcl_sample_consensus.zip',
-                'libpcl_search.zip',
-                'libpcl_segmentation.zip',
-                'libpcl_stereo.zip'
-        ]
-
-        archives.each { archiveName ->
-            def archiveFile = file("${archiveDir}/${archiveName}")
+        pclArchives.each { archiveName ->
+            def archiveFile = file("${pclLibDir}/${archiveName}")
 
             if (archiveFile.exists()) {
                 if (Os.isFamily(Os.FAMILY_WINDOWS)) {
                     exec {
-                        commandLine 'powershell', '-command', "& {Expand-Archive -Path '${archiveFile}' -DestinationPath '${archiveDir}' -Force}"
+                        commandLine 'powershell', '-command', "& {Expand-Archive -Path '${archiveFile}' -DestinationPath '${pclLibDir}' -Force}"
                     }
                 } else {
                     exec {
-                        commandLine 'bash', '-c', "unzip ${archiveFile} -d ${archiveDir}"
+                        commandLine 'bash', '-c', "unzip -o '${archiveFile}' -d '${pclLibDir}'"
                     }
                 }
 
                 println "Archive ${archiveName} successfully unpacked!"
-
-                if (archiveFile.exists()) {
-                    archiveFile.delete()
-                    println "Deleted archive ${archiveName}"
-                }
-
-                def parts = fileTree(dir: archiveDir, includes: ["${archiveName}.*"])
-                parts.each { part ->
-                    if (part.exists()) {
-                        part.delete()
-                        println "Deleted part of archive ${part.name}"
-                    }
-                }
             } else {
                 println "Archive ${archiveName} does not exist, skipping extraction."
             }
@@ -123,16 +86,17 @@ tasks.register('extractArchives') {
 
 extractArchives.dependsOn mergeArchiveParts
 
-preBuild.dependsOn extractArchives
-
-
-
-
-
-
+tasks.register('preparePrefabHeaders', Sync) {
+    from("${nativeRoot}/pcl/include")
+    from("${nativeRoot}/boost/include")
+    from("${nativeRoot}/eigen/include/eigen3")
+    from("${nativeRoot}/flann/include")
+    from("${nativeRoot}/lz4/include")
+    into(prefabHeadersDir)
+}
 
 android {
-    namespace 'com.example.pclibrary'
+    namespace 'io.github.vserghei.pcl'
     compileSdk 34
 
     defaultConfig {
@@ -166,6 +130,23 @@ android {
         }
     }
 
+    publishing {
+        singleVariant('debug')
+        singleVariant('release') {
+            withSourcesJar()
+        }
+    }
+
+    buildFeatures {
+        prefabPublishing true
+    }
+
+    prefab {
+        pclibrary {
+            headers "${buildDir}/generated/prefabHeaders"
+        }
+    }
+
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
@@ -174,13 +155,14 @@ android {
     kotlinOptions {
         jvmTarget = '1.8'
     }
-
-
-
-
 }
 
+preBuild.dependsOn extractArchives
+preBuild.dependsOn preparePrefabHeaders
 
+tasks.matching { it.name.startsWith("generatePrefab") || it.name.startsWith("package") }.configureEach {
+    dependsOn preparePrefabHeaders
+}
 
 publishing {
     repositories {
@@ -194,20 +176,45 @@ publishing {
         }
     }
     publications {
-        gpr(MavenPublication) {
-            groupId = 'org.group'
-            artifactId = 'artifact'
-            version = '0.1'
+        release(MavenPublication) {
+            groupId = project.findProperty("GROUP")
+            artifactId = project.findProperty("POM_ARTIFACT_ID")
+            version = project.findProperty("VERSION_NAME")
+
+            pom {
+                name = project.findProperty("POM_NAME")
+                description = project.findProperty("POM_DESCRIPTION")
+                url = project.findProperty("POM_URL")
+                licenses {
+                    license {
+                        name = "BSD-3-Clause"
+                        url = "https://opensource.org/license/bsd-3-clause"
+                    }
+                }
+                developers {
+                    developer {
+                        id = "V-Serghei"
+                        name = "V-Serghei"
+                    }
+                }
+                scm {
+                    connection = "scm:git:https://github.com/V-Serghei/pcl-binaries-android-armv8.git"
+                    developerConnection = "scm:git:ssh://git@github.com/V-Serghei/pcl-binaries-android-armv8.git"
+                    url = "https://github.com/V-Serghei/pcl-binaries-android-armv8"
+                }
+            }
         }
     }
+}
 
+afterEvaluate {
+    publishing.publications.named("release", MavenPublication) {
+        from components.release
+    }
 }
 
 
 dependencies {
-    implementation libs.androidx.core.ktx
-    implementation libs.androidx.appcompat
-    implementation libs.material
     testImplementation libs.junit
     androidTestImplementation libs.androidx.junit
     androidTestImplementation libs.androidx.espresso.core

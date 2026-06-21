@@ -1,4 +1,4 @@
-package com.example.pclibrary
+package io.github.vserghei.pcl
 
 import org.junit.Test
 
