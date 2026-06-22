@@ -22,7 +22,7 @@ Add the package to the Android app module:
 
 ```groovy
 dependencies {
-    implementation "io.github.v-serghei:pcl-android-arm64:1.0.2"
+    implementation "io.github.v-serghei:pcl-android-arm64:1.0.3"
 }
 ```
 
@@ -77,7 +77,7 @@ repositories {
 }
 
 dependencies {
-    implementation "io.github.v-serghei:pcl-android-arm64:1.0.2"
+    implementation "io.github.v-serghei:pcl-android-arm64:1.0.3"
 }
 ```
 
@@ -93,7 +93,7 @@ Consuming Android modules must also enable Prefab, use `arm64-v8a`, and pin NDK 
 | GitHub Packages repository | `https://maven.pkg.github.com/V-Serghei/pcl-binaries-android-armv8` |
 | Group ID | `io.github.v-serghei` |
 | Artifact ID | `pcl-android-arm64` |
-| Current version | `1.0.2` |
+| Current version | `1.0.3` |
 | Android ABI | `arm64-v8a` |
 | Minimum SDK | `29` |
 | Package format | Android AAR with Prefab |
@@ -163,7 +163,7 @@ android {
 }
 
 dependencies {
-    implementation "io.github.v-serghei:pcl-android-arm64:1.0.2"
+    implementation "io.github.v-serghei:pcl-android-arm64:1.0.3"
 }
 ```
 
@@ -360,14 +360,14 @@ Release flow:
 1. Update `VERSION_NAME` in `gradle.properties`.
 2. Commit and push the changes.
 3. Merge into `main`.
-4. Create a GitHub Release with a matching tag, for example `v1.0.2`.
+4. Create a GitHub Release with a matching tag, for example `v1.0.3`.
 5. The `Gradle Package` workflow builds the library and sample.
 6. On release events, the workflow runs `:pclibrary:publish`.
 
 Expected published coordinate:
 
 ```text
-io.github.v-serghei:pcl-android-arm64:1.0.2
+io.github.v-serghei:pcl-android-arm64:1.0.3
 ```
 
 ## Maven Central Manual Upload
@@ -445,7 +445,7 @@ Run:
 The upload file will be created at:
 
 ```text
-pclibrary/build/distributions/pcl-android-arm64-1.0.2-maven-central-bundle.zip
+pclibrary/build/distributions/pcl-android-arm64-1.0.3-maven-central-bundle.zip
 ```
 
 ### 4. Upload In Central Portal
@@ -455,7 +455,7 @@ In `central.sonatype.com/publishing`:
 1. Click **Publish Component**.
 2. Use deployment name:
    ```text
-   pcl-android-arm64-1.0.2
+   pcl-android-arm64-1.0.3
    ```
 3. Optional description:
    ```text
@@ -464,7 +464,7 @@ In `central.sonatype.com/publishing`:
 4. Click **Choose File**.
 5. Select:
    ```text
-   pclibrary/build/distributions/pcl-android-arm64-1.0.2-maven-central-bundle.zip
+   pclibrary/build/distributions/pcl-android-arm64-1.0.3-maven-central-bundle.zip
    ```
 6. Click **Publish Component**.
 7. Wait for validation.
@@ -479,7 +479,7 @@ repositories {
 }
 
 dependencies {
-    implementation "io.github.v-serghei:pcl-android-arm64:1.0.2"
+    implementation "io.github.v-serghei:pcl-android-arm64:1.0.3"
 }
 ```
 
