@@ -53,7 +53,7 @@ dependencyResolutionManagement {
 
 ```groovy
 dependencies {
-    implementation "io.github.v-serghei:pcl-android-arm64:1.0.3"
+    implementation "io.github.v-serghei:pcl-android-arm64:1.0.4"
 }
 ```
 
@@ -123,8 +123,8 @@ target_link_libraries(native-lib
 | Public repository | `mavenCentral()` |
 | Group ID | `io.github.v-serghei` |
 | Artifact ID | `pcl-android-arm64` |
-| Current version | `1.0.3` |
-| Maven coordinate | `io.github.v-serghei:pcl-android-arm64:1.0.3` |
+| Current version | `1.0.4` |
+| Maven coordinate | `io.github.v-serghei:pcl-android-arm64:1.0.4` |
 | GitHub Packages fallback | `https://maven.pkg.github.com/V-Serghei/pcl-binaries-android-armv8` |
 
 </div>
@@ -188,7 +188,7 @@ android {
 }
 
 dependencies {
-    implementation "io.github.v-serghei:pcl-android-arm64:1.0.3"
+    implementation "io.github.v-serghei:pcl-android-arm64:1.0.4"
 }
 ```
 
@@ -288,6 +288,24 @@ flann/util/heap.h:108:35: error: no template named 'binary_function' in namespac
 
 Use NDK `26.1.10909125` and rebuild.
 
+## Android 16 KB Page Size
+
+Starting with newer Android devices, native libraries must be compatible with 16 KB memory page sizes. Android checks ELF `LOAD` segment alignment for every packaged `.so`.
+
+This AAR links `libpclibrary.so` with:
+
+```text
+-Wl,-z,max-page-size=16384
+```
+
+That makes the PCL wrapper shared library compatible with 16 KB page-size checks. Consuming apps should apply the same linker flag to their own native libraries:
+
+```cmake
+target_link_options(native-lib PRIVATE -Wl,-z,max-page-size=16384)
+```
+
+If an app still shows the Android compatibility warning, inspect the full list of reported `.so` files. Libraries from ARCore, Sceneform, Filament, Chaquopy, Python, or other third-party SDKs must be updated or rebuilt by their maintainers.
+
 ## Sample App
 
 The `sample` module demonstrates the intended integration.
@@ -351,14 +369,14 @@ Release flow:
 1. Update `VERSION_NAME` in `gradle.properties`.
 2. Commit and push the changes.
 3. Merge into `main`.
-4. Create a GitHub Release with a matching tag, for example `v1.0.3`.
+4. Create a GitHub Release with a matching tag, for example `v1.0.4`.
 5. The `Gradle Package` workflow builds the library and sample.
 6. On release events, the workflow runs `:pclibrary:publish`.
 
 Expected published coordinate:
 
 ```text
-io.github.v-serghei:pcl-android-arm64:1.0.3
+io.github.v-serghei:pcl-android-arm64:1.0.4
 ```
 
 ### Maven Central
@@ -376,15 +394,15 @@ Create the upload bundle:
 The upload file will be created at:
 
 ```text
-pclibrary/build/distributions/pcl-android-arm64-1.0.3-maven-central-bundle.zip
+pclibrary/build/distributions/pcl-android-arm64-1.0.4-maven-central-bundle.zip
 ```
 
 In `central.sonatype.com/publishing`:
 
 1. Click **Publish Component**.
-2. Use deployment name `pcl-android-arm64-1.0.3`.
+2. Use deployment name `pcl-android-arm64-1.0.4`.
 3. Use description `PCL Android ARM64 AAR with Prefab metadata.`
-4. Select `pclibrary/build/distributions/pcl-android-arm64-1.0.3-maven-central-bundle.zip`.
+4. Select `pclibrary/build/distributions/pcl-android-arm64-1.0.4-maven-central-bundle.zip`.
 5. Click **Publish Component**.
 6. Wait for validation.
 7. If validation passes, click **Publish** on the deployment card.

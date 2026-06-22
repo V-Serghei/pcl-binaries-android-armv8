@@ -12,7 +12,9 @@ add_library(${CMAKE_PROJECT_NAME} SHARED
         pclibrary.cpp)
 
 target_compile_options(${CMAKE_PROJECT_NAME} PRIVATE -fopenmp)
-target_link_options(${CMAKE_PROJECT_NAME} PRIVATE -fopenmp)
+target_link_options(${CMAKE_PROJECT_NAME} PRIVATE
+        -fopenmp
+        -Wl,-z,max-page-size=16384)
 
 target_link_libraries(${CMAKE_PROJECT_NAME}
         -Wl,--whole-archive
