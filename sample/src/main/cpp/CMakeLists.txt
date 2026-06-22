@@ -23,6 +23,8 @@ if(PCL_ANDROID_TARGET_TYPE STREQUAL "INTERFACE_LIBRARY")
     endif()
 endif()
 
+target_link_options(native-lib PRIVATE -Wl,-z,max-page-size=16384)
+
 target_link_libraries(native-lib
         ${PCL_ANDROID_TARGET}
         log)
